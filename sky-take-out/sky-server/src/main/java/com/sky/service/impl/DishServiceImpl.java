@@ -186,4 +186,8 @@ public class DishServiceImpl implements DishService {
     public List<Dish> queryByCategory(Long categoryId) {
         return dishMapper.queryByCategory(categoryId);
     }
+
+    public List<Dish> getBySetmealId(Long setmealId) {
+        return dishMapper.getBySetmealId(setmealId);
+    }
 }
