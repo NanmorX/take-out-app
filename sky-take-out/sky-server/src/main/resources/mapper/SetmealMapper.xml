@@ -26,7 +26,7 @@
     <select id="pageQuery" resultType="com.sky.vo.SetmealVO">
         select s.*, c.name as categoryName from setmeal s left outer join category c on s.category_id = c.id
         <where>
-            <if test="name != null">s.name = #{name},</if>
+            <if test="name != null">s.name like concat('%', #{name}, '%'),</if>
             <if test="categoryId != null">s.category_id = #{categoryId},</if>
             <if test="status != null">s.status = #{status},</if>
         </where>
