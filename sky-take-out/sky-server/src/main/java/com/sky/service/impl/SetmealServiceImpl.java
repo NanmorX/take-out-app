@@ -115,6 +115,7 @@ public class SetmealServiceImpl implements SetmealService {
      * 修改套餐以及对应的菜品
      * @param setmealDTO
      */
+    @Transactional
     public void updateWithDish(SetmealDTO setmealDTO) {
         Setmeal setmeal = new Setmeal();
         BeanUtils.copyProperties(setmealDTO, setmeal);
@@ -144,14 +145,22 @@ public class SetmealServiceImpl implements SetmealService {
                         .build();
 
         if (status == StatusConstant.ENABLE) {
-            List<Long> dishIds = setmealDishMapper.getDishIdsBySetmealId(id);
-            if (dishIds != null && dishIds.size() > 0) {
-                for (Long dishId : dishIds) {
-                    Integer dishStatus = dishService.getByIdWithFlavor(dishId).getStatus();
-                    if (dishStatus == StatusConstant.DISABLE) {
+//            List<Long> dishIds = setmealDishMapper.getDishIdsBySetmealId(id);
+//            if (dishIds != null && dishIds.size() > 0) {
+//                for (Long dishId : dishIds) {
+//                    Integer dishStatus = dishService.getByIdWithFlavor(dishId).getStatus();
+//                    if (dishStatus == StatusConstant.DISABLE) {
+//                        throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
+//                    }
+//                }
+//            }
+            List<Dish> dishList = dishService.getBySetmealId(id);
+            if (dishList != null && dishList.size() > 0) {
+                dishList.forEach(dish -> {
+                    if (dish.getStatus() == StatusConstant.DISABLE) {
                         throw new SetmealEnableFailedException(MessageConstant.SETMEAL_ENABLE_FAILED);
                     }
-                }
+                });
             }
         }
         setmealMapper.update(setmeal);
