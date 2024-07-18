@@ -43,4 +43,9 @@
         </set>
         where id = #{id}
     </update>
+    
+    <select id="queryByCategory" resultType="com.sky.entity.Dish">
+        select * from dish where category_id = #{categoryId}
+        order by create_time desc
+    </select>
 </mapper>
