@@ -5,6 +5,7 @@ import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
 import com.sky.result.PageResult;
 import com.sky.vo.DishVO;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -54,4 +55,12 @@ public interface DishService {
      * @return
      */
     List<Dish> queryByCategory(Long categoryId);
+
+    /**
+     * 根据套餐id查菜品
+     * @param setmealId
+     * @return
+     */
+    @Select("select d.* from dish d left join setmeal_dish s on d.id = s.dish_id where s.setmeal_id = #{setmealId}")
+    List<Dish> getBySetmealId(Long setmealId);
 }
