@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 @RestController("adminShopController")
 @RequestMapping("/admin/shop")
 @Api(tags = "店铺相关接口")
@@ -28,7 +30,7 @@ public class ShopController {
     @PutMapping("/{status}")
     @ApiOperation("设置营业状态")
     public Result<String> setStatus(@PathVariable Integer status) {
-        log.info("设置店铺的营业状态为：{}", status == StatusConstant.ENABLE ? "营业" : "打烊");
+        log.info("设置店铺的营业状态为：{}", status.equals(StatusConstant.ENABLE) ? "营业" : "打烊");
         redisTemplate.opsForValue().set(KEY, status);
         return Result.success();
     }
@@ -41,7 +43,7 @@ public class ShopController {
     @ApiOperation("获取店铺的营业状态")
     public Result<Integer> getStatus() {
         Integer status = (Integer) redisTemplate.opsForValue().get(KEY);
-        log.info("获取店铺的营业状态为{}", status == StatusConstant.ENABLE ? "营业" : "打烊");
+        log.info("获取店铺的营业状态为{}", status.equals(StatusConstant.ENABLE) ? "营业" : "打烊");
         return Result.success(status);
     }
 }
