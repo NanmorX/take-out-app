@@ -101,14 +101,20 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         ShoppingCart shoppingCart = new ShoppingCart();
         BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
 
+        //TODO: 设置查询条件，查询当前登录用户的购物车数据
+        shoppingCart.setUserId(BaseContext.getCurrentId());
+
         List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
-        if (shoppingCartList != null && shoppingCartList.size() == 1) {
-            if (shoppingCartList.get(0).getNumber() == 1) {
+        if (shoppingCartList != null && shoppingCartList.size() > 0) {
+            shoppingCart = shoppingCartList.get(0);
+
+            if (shoppingCart.getNumber() == 1) {
                 // delete
-                shoppingCartMapper.delete(shoppingCart);
+//                shoppingCartMapper.delete(shoppingCart);
+                shoppingCartMapper.deleteById(shoppingCart.getId());
             } else {
                 // update
-                BeanUtils.copyProperties(shoppingCartList.get(0), shoppingCart);
+//                BeanUtils.copyProperties(shoppingCartList.get(0), shoppingCart);
                 shoppingCart.setNumber(shoppingCart.getNumber() - 1);
                 shoppingCartMapper.updateNumberById(shoppingCart);
             }
