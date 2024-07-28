@@ -314,10 +314,20 @@ public class OrderServiceImpl implements OrderService {
         List<OrderVO> list = new ArrayList<>();
 
         for (Orders orders : page) {
-            List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orders.getId());
             OrderVO orderVO = new OrderVO();
             BeanUtils.copyProperties(orders, orderVO);
-            orderVO.setOrderDetailList(orderDetails);
+
+            List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
+
+            // 将每一条订单菜品信息拼接为字符串（格式：宫保鸡丁*3；）
+            List<String> orderDishList = orderDetailList.stream().map(x -> {
+                String orderDish = x.getName() + "*" + x.getNumber() + ";";
+                return orderDish;
+            }).collect(Collectors.toList());
+
+            String orderDetails = String.join("", orderDishList);
+
+            orderVO.setOrderDishes(orderDetails);
             list.add(orderVO);
         }
 
