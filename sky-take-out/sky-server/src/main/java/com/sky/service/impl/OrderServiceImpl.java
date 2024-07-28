@@ -1,5 +1,7 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -13,6 +15,7 @@ import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.utils.HttpClientUtil;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +33,9 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,6 +60,15 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private WeChatPayUtil weChatPayUtil;
 
+    @Value("${sky.shop.address}")
+    private String shopAddress;
+
+    @Value("${sky.baidu.ak}")
+    private String ak;
+
+    public static final String geocoding = "https://api.map.baidu.com/geocoding/v3?";
+    public static final String direction = "https://api.map.baidu.com/direction/v2/driving?";
+
     /**
      * 用户下单
      * @param ordersSubmitDTO
@@ -66,6 +81,10 @@ public class OrderServiceImpl implements OrderService {
         if (addressBook == null) {
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
+
+        // 超出配送范围
+        checkAddress(addressBook.getProvinceName() + addressBook.getCityName()
+                + addressBook.getDistrictName() + addressBook.getDetail());
 
         Long userId = BaseContext.getCurrentId();
         ShoppingCart shoppingCart = new ShoppingCart();
@@ -491,4 +510,58 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         orderMapper.update(orders);
     }
+
+
+    private void checkAddress(String address) {
+        // 得到经纬度坐标
+        // GET
+        Map<String, String> map = new HashMap<>();
+        map.put("address", shopAddress);
+        map.put("output", "json");
+        map.put("ak", ak);
+
+        String json_shop = HttpClientUtil.doGet(geocoding, map);
+        JSONObject jsonObject = JSON.parseObject(json_shop);
+        if (!jsonObject.getString("status").equals("0")) {
+            throw new OrderBusinessException("店铺地址解析失败");
+        }
+
+        String location_shop = JSON.parseObject(JSON.parseObject(json_shop).getString("result")).getString("location");
+        double lng_shop = Double.parseDouble(JSON.parseObject(location_shop).getString("lng"));
+        double lat_shop = Double.parseDouble(JSON.parseObject(location_shop).getString("lat"));
+
+        map.put("address", address);
+        String json_user = HttpClientUtil.doGet(geocoding, map);
+        jsonObject = JSON.parseObject(json_user);
+        if (!jsonObject.getString("status").equals("0")) {
+            throw new OrderBusinessException("收货地址解析失败");
+        }
+        String location_user = JSON.parseObject(JSON.parseObject(json_user).getString("result")).getString("location");
+
+        double lng_user = Double.parseDouble(JSON.parseObject(location_user).getString("lng"));
+        double lat_user = Double.parseDouble(JSON.parseObject(location_user).getString("lat"));
+
+        String origin = String.format("%.6f", lat_shop)+","+String.format("%.6f", lng_shop);
+        String destination = String.format("%.6f", lat_user)+","+String.format("%.6f", lng_user);
+
+        // 获取路径规划
+        map.clear();
+        map.put("origin", origin);
+        map.put("destination", destination);
+        map.put("ak", ak);
+        map.put("steps_info","0");
+        String json = HttpClientUtil.doGet(direction, map);
+        jsonObject = JSON.parseObject(json);
+        if (!jsonObject.getString("status").equals("0")) {
+            throw new OrderBusinessException("配送路线规划失败");
+        }
+
+        JSONArray routes = jsonObject.getJSONObject("result").getJSONArray("routes");
+        Integer distance = (Integer) ((JSONObject)routes.get(0)).get("distance");
+
+        if (distance > 5000) {
+            throw new OrderBusinessException("超出配送距离");
+        }
+    }
+
 }
