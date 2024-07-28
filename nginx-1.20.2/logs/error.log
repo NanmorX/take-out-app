@@ -32,3 +32,5 @@
 2024/07/24 19:11:08 [alert] 17480#32208: could not respawn worker
 2024/07/27 13:40:20 [alert] 31764#25104: worker process 15864 exited with code C0000142
 2024/07/27 13:40:20 [alert] 31764#25104: could not respawn worker
+2024/07/27 16:25:28 [alert] 9680#23336: worker process 22252 exited with code C0000142
+2024/07/27 16:25:28 [alert] 9680#23336: could not respawn worker
