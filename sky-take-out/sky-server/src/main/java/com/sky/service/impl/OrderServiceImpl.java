@@ -7,6 +7,7 @@ import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
+import com.sky.dto.OrdersRejectionDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.*;
 import com.sky.exception.AddressBookBusinessException;
@@ -21,6 +22,7 @@ import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -344,5 +346,40 @@ public class OrderServiceImpl implements OrderService {
         orderStatisticsVO.setConfirmed(orderMapper.count(Orders.CONFIRMED));
         orderStatisticsVO.setConfirmed(orderMapper.count(Orders.DELIVERY_IN_PROGRESS));
         return orderStatisticsVO;
+    }
+
+    /**
+     * 接单
+     * @param id
+     */
+    public void confirm(Long id) {
+
+        if (orderMapper.getById(id) == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        Orders orders = Orders.builder()
+                        .id(id)
+                        .status(Orders.CONFIRMED)
+                        .build();
+        orderMapper.update(orders);
+    }
+
+    /**
+     * 拒单
+     * @param ordersRejectionDTO
+     */
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
+        if (orderMapper.getById(ordersRejectionDTO.getId()) == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        Orders orders = Orders.builder()
+                .id(ordersRejectionDTO.getId())
+                .status(Orders.CANCELLED)
+                .rejectionReason(ordersRejectionDTO.getRejectionReason())
+                .cancelTime(LocalDateTime.now())
+                .build();
+        orderMapper.update(orders);
     }
 }
