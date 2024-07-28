@@ -38,5 +38,16 @@ public interface OrderService {
      */
     PageResult pageQuery4User(OrdersPageQueryDTO ordersPageQueryDTO);
 
+    /**
+     * 查询订单详细信息
+     * @param orderId
+     * @return
+     */
     OrderVO orderDetailQuery(Long orderId);
+
+    /**
+     * 取消订单
+     * @param id
+     */
+    void cancelByUser(Long id) throws Exception;
 }
