@@ -341,7 +341,7 @@ public class OrderServiceImpl implements OrderService {
         OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
         orderStatisticsVO.setToBeConfirmed(orderMapper.count(Orders.TO_BE_CONFIRMED));
         orderStatisticsVO.setConfirmed(orderMapper.count(Orders.CONFIRMED));
-        orderStatisticsVO.setConfirmed(orderMapper.count(Orders.DELIVERY_IN_PROGRESS));
+        orderStatisticsVO.setDeliveryInProgress(orderMapper.count(Orders.DELIVERY_IN_PROGRESS));
         return orderStatisticsVO;
     }
 
