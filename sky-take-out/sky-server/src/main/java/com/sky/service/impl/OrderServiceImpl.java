@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -276,31 +277,50 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void repetition(Long id) throws Exception {
         Orders ordersDB = orderMapper.getById(id);
+        Long userId = BaseContext.getCurrentId();
 
         if (ordersDB == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
 
-        //构造订单数据
-        Orders order = new Orders();
-        BeanUtils.copyProperties(ordersDB,order);
-        order.setNumber(String.valueOf(System.currentTimeMillis()));
-        order.setStatus(Orders.PENDING_PAYMENT);
-        order.setPayStatus(Orders.UN_PAID);
-        order.setOrderTime(LocalDateTime.now());
-        order.setId(null);
-
-        //向订单表插入1条数据
-        orderMapper.insert(order);
-
         //订单明细数据
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
 
-        for (OrderDetail orderDetail : orderDetailList) {
-            orderDetail.setOrderId(order.getId());
+        List<ShoppingCart> shoppingCartList = orderDetailList.stream().map(x -> {
+            ShoppingCart shoppingCart = new ShoppingCart();
+
+            // 将原订单详情里面的菜品信息重新复制到购物车对象中
+            BeanUtils.copyProperties(x, shoppingCart, "id");
+            shoppingCart.setUserId(userId);
+            shoppingCart.setCreateTime(LocalDateTime.now());
+
+            return shoppingCart;
+        }).collect(Collectors.toList());
+
+        // 将购物车对象批量添加到数据库
+        shoppingCartMapper.insertBatch(shoppingCartList);
+    }
+
+    /**
+     * 管理端订单条件查询
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    public PageResult pageQuery4Admin(OrdersPageQueryDTO ordersPageQueryDTO) {
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
+        Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+        List<OrderVO> list = new ArrayList<>();
+
+        for (Orders orders : page) {
+            List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orders.getId());
+            OrderVO orderVO = new OrderVO();
+            BeanUtils.copyProperties(orders, orderVO);
+            orderVO.setOrderDetailList(orderDetails);
+            list.add(orderVO);
         }
 
-        //向明细表插入n条数据
-        orderDetailMapper.insertBatch(orderDetailList);
+        return new PageResult(page.getTotal(), list);
     }
 }

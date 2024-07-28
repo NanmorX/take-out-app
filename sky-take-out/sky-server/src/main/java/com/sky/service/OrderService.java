@@ -56,4 +56,11 @@ public interface OrderService {
      * @param id
      */
     void repetition(Long id) throws Exception;
+
+    /**
+     * 管理端订单条件查询
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    PageResult pageQuery4Admin(OrdersPageQueryDTO ordersPageQueryDTO);
 }
