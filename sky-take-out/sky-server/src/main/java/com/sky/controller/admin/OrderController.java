@@ -1,6 +1,7 @@
 package com.sky.controller.admin;
 
 import com.github.pagehelper.Page;
+import com.sky.dto.OrdersConfirmDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersRejectionDTO;
 import com.sky.result.PageResult;
@@ -67,9 +68,9 @@ public class OrderController {
      */
     @PutMapping("/confirm")
     @ApiOperation("接单")
-    public Result<String> confirm(@RequestBody Long id) {
-        log.info("接单：{}", id);
-        orderService.confirm(id);
+    public Result<String> confirm(@RequestBody OrdersConfirmDTO ordersConfirmDTO) {
+        log.info("接单：{}", ordersConfirmDTO);
+        orderService.confirm(ordersConfirmDTO);
         return Result.success();
     }
 
