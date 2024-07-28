@@ -93,4 +93,14 @@ public class OrderController {
         return Result.success();
     }
 
+    /**
+     * 再来一单
+     * @return
+     */
+    @PostMapping("/repetition/{id}")
+    public Result<String> repetition(@PathVariable Long id) throws Exception {
+        log.info("再来一单：{}", id);
+        orderService.repetition(id);
+        return Result.success();
+    }
 }

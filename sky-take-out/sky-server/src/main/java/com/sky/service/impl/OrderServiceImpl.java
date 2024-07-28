@@ -268,4 +268,41 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.update(orders);
 
     }
+
+    /**
+     * 再来一单
+     * @param id
+     * @throws Exception
+     */
+    @Transactional
+    public void repetition(Long id) throws Exception {
+        Orders ordersDB = orderMapper.getById(id);
+
+        if (ordersDB == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //构造订单数据
+        Orders order = new Orders();
+        BeanUtils.copyProperties(ordersDB,order);
+        order.setNumber(String.valueOf(System.currentTimeMillis()));
+        order.setStatus(Orders.PENDING_PAYMENT);
+        order.setPayStatus(Orders.UN_PAID);
+        order.setOrderTime(LocalDateTime.now());
+        order.setId(null);
+
+        //向订单表插入1条数据
+        orderMapper.insert(order);
+
+        //订单明细数据
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+
+        for (OrderDetail orderDetail : orderDetailList) {
+            orderDetail.setOrderId(order.getId());
+            orderDetailList.add(orderDetail);
+        }
+
+        //向明细表插入n条数据
+        orderDetailMapper.insertBatch(orderDetailList);
+    }
 }
