@@ -308,7 +308,6 @@ public class OrderServiceImpl implements OrderService {
      */
     public PageResult pageQuery4Admin(OrdersPageQueryDTO ordersPageQueryDTO) {
         PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
-        ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
 
         List<OrderVO> list = new ArrayList<>();
