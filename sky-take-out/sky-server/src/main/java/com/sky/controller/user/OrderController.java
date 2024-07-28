@@ -1,9 +1,10 @@
 package com.sky.controller.user;
 
-import com.github.pagehelper.Page;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
+import com.sky.entity.OrderDetail;
+import com.sky.entity.Orders;
 import com.sky.result.PageResult;
 import com.sky.result.Result;
 import com.sky.service.OrderService;
@@ -64,6 +65,19 @@ public class OrderController {
         log.info("查询历史订单: {}", ordersPageQueryDTO);
         PageResult pageResult = orderService.pageQuery4User(ordersPageQueryDTO);
         return Result.success(pageResult);
+    }
+
+    /**
+     * 查询订单详细信息
+     * @return
+     */
+    @GetMapping("/orderDetail/{id}")
+    @ApiOperation("查询订单详细信息")
+    public Result<OrderVO> orderDetailQuery(@PathVariable Long id) {
+        // id 是 orderid
+        log.info("查询订单详细信息，订单id为{}", id);
+        OrderVO orderVO = orderService.orderDetailQuery(id);
+        return Result.success(orderVO);
     }
 
 }
