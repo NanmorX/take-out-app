@@ -367,16 +367,47 @@ public class OrderServiceImpl implements OrderService {
      * @param ordersRejectionDTO
      */
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
-        if (orderMapper.getById(ordersRejectionDTO.getId()) == null) {
-            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+//        if (orderMapper.getById(ordersRejectionDTO.getId()) == null) {
+//            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+//        }
+//
+//        Orders orders = Orders.builder()
+//                .id(ordersRejectionDTO.getId())
+//                .status(Orders.CANCELLED)
+//                .rejectionReason(ordersRejectionDTO.getRejectionReason())
+//                .cancelTime(LocalDateTime.now())
+//                .build();
+//        orderMapper.update(orders);
+
+        // 根据id查询订单
+        Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
+
+        // 订单只有存在且状态为2（待接单）才可以拒单
+        if (ordersDB == null || !ordersDB.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        Orders orders = Orders.builder()
-                .id(ordersRejectionDTO.getId())
-                .status(Orders.CANCELLED)
-                .rejectionReason(ordersRejectionDTO.getRejectionReason())
-                .cancelTime(LocalDateTime.now())
-                .build();
+        Orders orders = new Orders();
+
+        //支付状态
+        Integer payStatus = ordersDB.getPayStatus();
+        if (payStatus == Orders.PAID) {
+//            //用户已支付，需要退款
+//            String refund = weChatPayUtil.refund(
+//                    ordersDB.getNumber(),
+//                    ordersDB.getNumber(),
+//                    new BigDecimal(0.01),
+//                    new BigDecimal(0.01));
+            log.info("申请退款");
+            orders.setPayStatus(Orders.REFUND);
+        }
+
+        // 拒单需要退款，根据订单id更新订单状态、拒单原因、取消时间
+        orders.setId(ordersDB.getId());
+        orders.setStatus(Orders.CANCELLED);
+        orders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        orders.setCancelTime(LocalDateTime.now());
+
         orderMapper.update(orders);
     }
 
@@ -395,7 +426,8 @@ public class OrderServiceImpl implements OrderService {
         orders.setId(ordersCancelDTO.getId());
 
         // 订单处于待接单状态下取消，需要进行退款
-        if (ordersDB.getStatus() >= 3) {
+//        if (ordersDB.getStatus() >= 3) {
+        if (ordersDB.getPayStatus().equals(Orders.PAID)) {
             //调用微信支付退款接口
 //            weChatPayUtil.refund(
 //                    ordersDB.getNumber(), //商户订单号
@@ -420,8 +452,14 @@ public class OrderServiceImpl implements OrderService {
      * @param id
      */
     public void delivery(Long id) {
-        if (orderMapper.getById(id) == null) {
+        Orders ordersDB = orderMapper.getById(id);
+
+        if (ordersDB == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        if (!ordersDB.getStatus().equals(Orders.CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
         Orders orders = Orders.builder()
@@ -436,8 +474,14 @@ public class OrderServiceImpl implements OrderService {
      * @param id
      */
     public void complete(Long id) {
-        if (orderMapper.getById(id) == null) {
+        Orders ordersDB = orderMapper.getById(id);
+
+        if (ordersDB == null) {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        if (!ordersDB.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
         Orders orders = Orders.builder()
