@@ -255,9 +255,10 @@ public class OrderServiceImpl implements OrderService {
 
         LocalDateTime curTime = LocalDateTime.now();
         Duration duration = Duration.between(curTime, ordersDB.getOrderTime());
+        log.info("{}", duration);
 
         // 付款超时
-        if (ordersDB.getStatus().equals(Orders.PENDING_PAYMENT) && duration.toMinutes() >= 15) {
+        if (ordersDB.getStatus().equals(Orders.PENDING_PAYMENT) && duration.toMinutes() >= 14) {
             orders.setCancelReason("超时未付款");
         }
         else{
