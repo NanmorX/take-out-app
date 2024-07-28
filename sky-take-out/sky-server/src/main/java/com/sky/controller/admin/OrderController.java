@@ -99,4 +99,30 @@ public class OrderController {
         orderService.cancelByAdmin(ordersCancelDTO);
         return Result.success();
     }
+
+    /**
+     * 派送订单
+     * @param id
+     * @return
+     */
+    @PutMapping("/delivery/{id}")
+    @ApiOperation("派送订单")
+    public Result<String> delivery(@PathVariable Long id) {
+        log.info("派送订单：{}", id);
+        orderService.delivery(id);
+        return Result.success();
+    }
+
+    /**
+     * 完成订单
+     * @param id
+     * @return
+     */
+    @PutMapping("/complete/{id}")
+    @ApiOperation("完成订单")
+    public Result<String> complete(@PathVariable Long id) {
+        log.info("完成订单：{}", id);
+        orderService.complete(id);
+        return Result.success();
+    }
 }
