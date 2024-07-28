@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -251,8 +252,18 @@ public class OrderServiceImpl implements OrderService {
 
         // 更新订单状态、取消原因、取消时间
         orders.setStatus(Orders.CANCELLED);
-        orders.setCancelReason("用户取消");
-        orders.setCancelTime(LocalDateTime.now());
+
+        LocalDateTime curTime = LocalDateTime.now();
+        Duration duration = Duration.between(curTime, ordersDB.getOrderTime());
+
+        // 付款超时
+        if (ordersDB.getStatus().equals(Orders.PENDING_PAYMENT) && duration.toMinutes() >= 15) {
+            orders.setCancelReason("超时未付款");
+        }
+        else{
+            orders.setCancelReason("用户取消");
+        }
+        orders.setCancelTime(curTime);
         orderMapper.update(orders);
 
     }
