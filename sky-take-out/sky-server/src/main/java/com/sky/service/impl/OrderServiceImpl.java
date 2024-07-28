@@ -254,8 +254,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(Orders.CANCELLED);
 
         LocalDateTime curTime = LocalDateTime.now();
-        Duration duration = Duration.between(curTime, ordersDB.getOrderTime());
-        log.info("{}", duration);
+        Duration duration = Duration.between(ordersDB.getOrderTime(), curTime);
 
         // 付款超时
         if (ordersDB.getStatus().equals(Orders.PENDING_PAYMENT) && duration.toMinutes() >= 14) {
@@ -299,7 +298,6 @@ public class OrderServiceImpl implements OrderService {
 
         for (OrderDetail orderDetail : orderDetailList) {
             orderDetail.setOrderId(order.getId());
-            orderDetailList.add(orderDetail);
         }
 
         //向明细表插入n条数据
