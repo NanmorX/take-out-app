@@ -45,7 +45,8 @@ public class OrderTask {
     /**
      * 处理“派送中”状态的订单
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 1 * * ?") // 每天凌晨一点
+//    @Scheduled(cron = "0/5 * * * * ?")
     public void processDeliveryOrder(){
         log.info("处理派送中订单：{}", new Date());
 
