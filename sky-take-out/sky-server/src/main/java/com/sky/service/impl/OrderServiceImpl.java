@@ -198,7 +198,7 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.update(orders);
 
         Map map = new HashMap();
-        map.put("type", 1);//消息类型，1表示来单提醒
+        map.put("type", 1); //消息类型，1表示来单提醒
         map.put("orderId", orders.getId());
         map.put("content", "订单号：" + outTradeNo);
 
