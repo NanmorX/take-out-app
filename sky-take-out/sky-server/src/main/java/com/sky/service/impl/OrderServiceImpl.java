@@ -21,6 +21,7 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
+import com.sky.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.BeanUtils;
@@ -59,6 +60,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     @Value("${sky.shop.address}")
     private String shopAddress;
@@ -192,6 +196,14 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+
+        Map map = new HashMap();
+        map.put("type", 1);//消息类型，1表示来单提醒
+        map.put("orderId", orders.getId());
+        map.put("content", "订单号：" + outTradeNo);
+
+        //通过WebSocket实现来单提醒，向客户端浏览器推送消息
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
     }
 
     /**
@@ -274,15 +286,16 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(Orders.CANCELLED);
 
         LocalDateTime curTime = LocalDateTime.now();
-        Duration duration = Duration.between(ordersDB.getOrderTime(), curTime);
-
-        // 付款超时
-        if (ordersDB.getStatus().equals(Orders.PENDING_PAYMENT) && duration.toMinutes() >= 14) {
-            orders.setCancelReason("超时未付款");
-        }
-        else{
-            orders.setCancelReason("用户取消");
-        }
+//        Duration duration = Duration.between(ordersDB.getOrderTime(), curTime);
+//
+//        // 付款超时
+//        if (ordersDB.getStatus().equals(Orders.PENDING_PAYMENT) && duration.toMinutes() >= 14) {
+//            orders.setCancelReason("超时未付款");
+//        }
+//        else{
+//            orders.setCancelReason("用户取消");
+//        }
+        orders.setCancelReason("用户取消");
         orders.setCancelTime(curTime);
         orderMapper.update(orders);
 
@@ -509,6 +522,25 @@ public class OrderServiceImpl implements OrderService {
                 .deliveryTime(LocalDateTime.now())
                 .build();
         orderMapper.update(orders);
+    }
+
+    /**
+     * 用户催单
+     * @param id
+     */
+    public void reminder(Long id) {
+        // 查询订单是否存在
+        Orders orders = orderMapper.getById(id);
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        //基于WebSocket实现催单
+        Map map = new HashMap();
+        map.put("type", 2);//2代表用户催单
+        map.put("orderId", id);
+        map.put("content", "订单号：" + orders.getNumber());
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
     }
 
 
