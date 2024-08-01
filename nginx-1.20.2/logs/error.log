@@ -34,3 +34,4 @@
 2024/07/27 13:40:20 [alert] 31764#25104: could not respawn worker
 2024/07/27 16:25:28 [alert] 9680#23336: worker process 22252 exited with code C0000142
 2024/07/27 16:25:28 [alert] 9680#23336: could not respawn worker
+2024/07/29 16:38:47 [error] 18268#13484: *73 WSARecv() failed (10054: An existing connection was forcibly closed by the remote host) while proxying upgraded connection, client: 127.0.0.1, server: localhost, request: "GET /ws/34319w54lrx HTTP/1.1", upstream: "http://127.0.0.1:8080/ws/34319w54lrx", host: "localhost"
